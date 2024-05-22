@@ -39,6 +39,8 @@ struct RegistrationView: View {
                           title: "Password",
                           placeholder: "Enter your password",
                           isSecureField: true)
+                
+                // Disabled button invalid form
                 ZStack(alignment: .trailing) {
                     InputView(text: $confirmPassword,
                               title: "Confirm Password",
@@ -64,7 +66,7 @@ struct RegistrationView: View {
             .padding(.top, 12)
             
             
-            // Button
+            // Button sign up
             Button {
                 Task {
                     try await viewModel.createUser(withEmail: email,
@@ -106,12 +108,25 @@ struct RegistrationView: View {
 
 extension RegistrationView: AuthenticationFormProtocol {
     var formIsValid: Bool {
-        return !email.isEmpty
-        && email.contains("@")
-        && !password.isEmpty
-        && password.count > 5
-        && confirmPassword == password
-        && !fullname.isEmpty
+        // Check if the email is not empty
+        guard !email.isEmpty else { return false }
+        
+        // Check if the email contains the @ character
+        guard email.contains("@") else { return false }
+        
+        // Check if the email has a valid domain
+        let emailParts = email.split(separator: "@")
+        guard emailParts.count == 2 else { return false }
+        
+        let domainParts = emailParts[1].split(separator: ".")
+        guard domainParts.count >= 2 else { return false }
+        guard !domainParts.last!.isEmpty else { return false }
+
+        // Check order
+        return !password.isEmpty
+            && password.count > 5
+            && confirmPassword == password
+            && !fullname.isEmpty
     }
 }
 

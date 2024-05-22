@@ -15,7 +15,7 @@ struct ProfileView: View {
             List {
                 Section {
                     HStack {
-                        Text(user.initials)
+                        Text(user.initials)		
                             .font(.title)
                             .fontWeight(.semibold)
                             .foregroundColor(.white)
@@ -59,7 +59,9 @@ struct ProfileView: View {
                                         tintColor: .red)
                     }
                     Button {
-                        print("Delete accout..")
+                        Task {
+                            await viewModel.deleteAccount()
+                        }
                     } label: {
                         SettingsRowView(imageName: "xmark.circle.fill",
                                         title: "Delete Account",
