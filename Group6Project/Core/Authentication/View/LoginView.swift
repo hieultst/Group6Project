@@ -23,7 +23,6 @@ struct LoginView: View {
                     .padding(.vertical, 32)
                 
                 // Form fields
-                
                 VStack(spacing: 24) {
                     InputView(text: $email,
                               title: "Email Address",
@@ -37,6 +36,20 @@ struct LoginView: View {
                 }
                 .padding(.horizontal)
                 .padding(.top, 12)
+                
+                // Fogot password button
+                HStack {
+                    Spacer()
+                    NavigationLink {
+                        RessetPasswordView()
+                            .navigationBarBackButtonHidden(true)
+                    } label: {
+                        Text("Forgot Password?")
+                            .font(.system(size: 14))
+                            .padding(.trailing, 24)
+                    }
+                    .padding(.top, 12)
+                }
                 
                 // Sign in button
                 
@@ -60,20 +73,6 @@ struct LoginView: View {
                 .padding(.top, 24)
                 
                 Spacer()
-                
-                // Sign up button
-                
-                NavigationLink {
-                    RegistrationView()
-                        .navigationBarBackButtonHidden(true)
-                } label: {
-                    HStack(spacing: 3) {
-                        Text("Don't have an account?")
-                        Text("Sign up")
-                            .fontWeight(.bold)
-                    }
-                    .font(.system(size: 14))
-                }
             }
         }
     }
@@ -83,10 +82,23 @@ struct LoginView: View {
 
 extension LoginView: AuthenticationFormProtocol {
     var formIsValid: Bool {
-        return !email.isEmpty
-        && email.contains("@")
-        && !password.isEmpty
-        && password.count > 5
+        // Check if the email is not empty
+        guard !email.isEmpty else { return false }
+        
+        // Check if the email contains the @ character
+        guard email.contains("@") else { return false }
+        
+        // Check if the email has a valid domain
+        let emailParts = email.split(separator: "@")
+        guard emailParts.count == 2 else { return false }
+        
+        let domainParts = emailParts[1].split(separator: ".")
+        guard domainParts.count >= 2 else { return false }
+        guard !domainParts.last!.isEmpty else { return false }
+
+        // Check order
+        return !password.isEmpty
+            && password.count > 5
     }
 }
 

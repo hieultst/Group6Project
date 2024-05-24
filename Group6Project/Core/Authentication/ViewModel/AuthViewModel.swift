@@ -17,6 +17,7 @@ protocol AuthenticationFormProtocol {
 class AuthViewModel: ObservableObject {
     @Published var userSession: FirebaseAuth.User?
     @Published var currentUser: User?
+    @Published var listUser: [User] = []
     
     init() {
         self.userSession = Auth.auth().currentUser
@@ -36,11 +37,11 @@ class AuthViewModel: ObservableObject {
         }
     }
     
-    func createUser(withEmail email: String, password: String, fullname: String) async throws {
+    func createUser(withEmail email: String, password: String, fullname: String, accouttype: String) async throws {
         do {
             let result = try await Auth.auth().createUser(withEmail: email, password: password)
             self.userSession = result.user
-            let user = User(id: result.user.uid, fullname: fullname, email: email)
+            let user = User(id: result.user.uid, fullname: fullname, email: email, accounttype: accouttype)
             let encodedUser = try Firestore.Encoder().encode(user)
             try await Firestore.firestore().collection("users").document(user.id).setData(encodedUser)
             await fetchUser()
@@ -79,9 +80,46 @@ class AuthViewModel: ObservableObject {
         }
     }
     
+    func ressetPassword(withEmail email: String) async throws {
+        do {
+            // Send email to reset password
+            try await Auth.auth().sendPasswordReset(withEmail: email)
+            // Print success message (to indicate that the email has been sent)
+            print("DEBUG: Password reset email sent successfully.")
+        } catch {
+            // Handle error if sending password reset email fails
+            print("DEBUG: Failed to send password reset email with error \(error.localizedDescription)")
+        }
+    }
+    
     func fetchUser() async {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         guard let snapshot = try? await Firestore.firestore().collection("users").document(uid).getDocument() else { return }
         self.currentUser = try? snapshot.data(as: User.self)
+    }
+    
+    func fetchUsers() async {
+        do {
+            // Lấy tất cả các tài liệu từ bộ sưu tập "users"
+            let querySnapshot = try await Firestore.firestore().collection("users").getDocuments()
+            
+            // Tạo một mảng để lưu trữ danh sách người dùng
+            var users: [User] = []
+            
+            // Lặp qua tất cả các tài liệu và thêm chúng vào mảng users
+            for document in querySnapshot.documents {
+                // Không cần sử dụng if let vì document.data(as: User.self) không trả về Optional
+                let userData = try document.data(as: User.self)
+                print("\(userData)")
+                users.append(userData)
+                
+            }
+            
+            // Gán mảng users đã lấy được cho thuộc tính currentUser
+            listUser = users
+            print(listUser)
+        } catch {
+            print("Error fetching users1: \(error.localizedDescription)")
+        }
     }
 }

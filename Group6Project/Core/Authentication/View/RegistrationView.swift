@@ -12,6 +12,10 @@ struct RegistrationView: View {
     @State private var fullname = ""
     @State private var password = ""
     @State private var confirmPassword = ""
+    @State private var accounttype = ""
+    @State private var showAlert = false
+    @State private var alertMessage = ""
+    
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var viewModel: AuthViewModel
     
@@ -30,11 +34,13 @@ struct RegistrationView: View {
                 InputView(text: $email,
                           title: "Email Address",
                           placeholder: "name@example.com")
-                    .autocapitalization(.none)
-                
+                .autocapitalization(.none)
                 InputView(text: $fullname,
                           title: "Full Name",
                           placeholder: "Enter your name")
+                InputView(text: $accounttype,
+                          title: "Account Type",
+                          placeholder: "Enter account type")
                 InputView(text: $password,
                           title: "Password",
                           placeholder: "Enter your password",
@@ -69,10 +75,19 @@ struct RegistrationView: View {
             // Button sign up
             Button {
                 Task {
-                    try await viewModel.createUser(withEmail: email,
-                                                   password: password,
-                                                   fullname: fullname)
+                    do {
+                        try await viewModel.createUser(withEmail: email,
+                                                       password: password,
+                                                       fullname: fullname,
+                                                       accouttype: accounttype)
+                        showAlert = true
+                        alertMessage = "Created successfully."
+                    } catch {
+                        showAlert = true
+                        alertMessage = "Failed to create user. \(error.localizedDescription)"
+                    }
                 }
+                
             } label: {
                 HStack {
                     Text("SIGN UP")
@@ -90,16 +105,21 @@ struct RegistrationView: View {
             
             Spacer()
             
-            Button {
+//            Button {
+//                dismiss()
+//            } label: {
+//                HStack(spacing: 3) {
+//                    Text("Already have an account?")
+//                    Text("Sign in")
+//                        .fontWeight(.bold)
+//                }
+//                .font(.system(size: 14))
+//            }
+        }
+        .alert(isPresented: $showAlert) {
+            Alert(title: Text("Success"), message: Text(alertMessage), dismissButton: .default(Text("OK"), action: {
                 dismiss()
-            } label: {
-                HStack(spacing: 3) {
-                    Text("Already have an account?")
-                    Text("Sign in")
-                        .fontWeight(.bold)
-                }
-                .font(.system(size: 14))
-            }
+            }))
         }
     }
 }
